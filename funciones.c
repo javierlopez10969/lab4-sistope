@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h> 
 #include <pthread.h>
-#include "estructuras.h"
 #include "funciones.h"
 
 //Entradas: recibe el nombre de la imagen a leer (char puntero), el numero de filas, columnas, un buffer para almacenar el contenido de la imagen,
@@ -68,71 +67,6 @@ int escribirImagen(char * salidaName , int filas, int columnas,float * buffer,in
 
 }
 
-//Entradas: cantidad de filas, 
-//cantidad de columnas, 
-//buffer con los datos de la imagen,
-//factor en el que se debehacer el zoom, N (cantidad de bytes)= Filas x Columnas x 4
-//Funcionamiento: Realiza el proceso de zoomIn a la imagen de entrada
-//Salidas: Nuevo buffer donde su contenido corresponde a la imagen posterior al proceso de zoom in.
-void zoomIN(int filas, int columnas,float * buffer , float ** zoom,int factor, int N){
-    //(filas * factor) * (columnas * factor) * 4 = (N) * factor * factor
-    float * newBuffer = (float*)malloc(sizeof(float)*N*factor);
-    float elemento  = buffer[0];
-    //Iterador que recorre el nuevo buffer
-    int k = 0;
-    int i = 0 ;
-    int j = 0;
-    int l = 0;
-    //Hacer las primeras N*factor columnas   * M filas
-    while (i < filas*columnas){ 
-        elemento  = buffer[i];
-        //printf("buffer[%d] : %f \n",i ,elemento);
-        //printf("k:%d, ",k);
-        j = 0;
-        while (j < factor){
-            //aumentar por los lados y por abajo
-            //Aumentamos por los lados
-            newBuffer [k] = elemento;
-            //printf("[%d] : ", k);
-            //printf("%f ,",  newBuffer[k]);
-            k++; 
-            j++;         
-        }
-        if(i!=0){
-            if(k%(columnas*factor) ==0){
-                //printf("\n\n fila %d \n\n", l);
-                l++;
-            }
-        }
-        i++; 
-    }
-    i = 0;
-    j = 0;
-    k = 0;
-    l=0;
-    int z  = 0;
-    float * bufferFinal = (float*)malloc(sizeof(float)*N*factor*factor);
-    while (i < columnas*filas*factor*factor){
-        j=0;
-        while (j < factor){
-            l = 0;
-            k = z;
-            while(l < columnas*factor){
-                bufferFinal[i] = newBuffer[k]; 
-                //printf("i : %d,",i);
-                //printf("k : %d, \n",k);
-                l++;
-                i++;
-                k++;
-            }
-            j++;
-        }
-        z = k;
-
-    }
-    *zoom = bufferFinal; 
-}
-
 //Entradas: Numero de filas y columnas, el buffer original con el contenido de la imagen, un buffer el cual se encuentra vacio (NULL);
 //y N que corresponde a la cantidad de bytes (filas * columnas * 4)
 //Funcionamiento: realiza el proceso de suavizado, el cual consiste en revisa cada posicion posible para los bytes,
@@ -195,71 +129,4 @@ void suavizado(int filas, int columnas,float * buffer , float ** suavizados, int
         i++;
     }
     *suavizados = newBuffer;
-}
-
-
-//Entradas: Numero de filas y columnas, el buffer original con el contenido de la imagen, un buffer el cual se encuentra vacio (NULL);
-//y N que corresponde a la cantidad de bytes (filas * columnas * 4).
-//Funcionamiento: realiza el proceso de Delineado, el cual consiste en que cada posicion del vecindario (incluido el centro) debe cambiar su valor por uno pre-establecido en la mascara laplaciana
-//la adicion de estos nuevos valores corresponde al nuevo valor que tendra el pixel en esa misma posicion
-//Salidas: Nuevo buffer el cual corresponde a la imagen posterior a su proceso de delineado.
-void delineado(int filas, int columnas,float * buffer , float ** delineados, int N){
-    float * newBuffer = (float*)malloc(sizeof(float)*(columnas*filas*4));
-    //Iterador que recorre el nuevo buffer
-    int i = 0 ;
-    float posPrima = 0;
-    while (i < filas*columnas){
-        //printf(" %d -", i);
-        //utiliza la misma estrategia que en suavizado para encontrar a los vecinos de la posicion actual
-        //la posición de cada caso siempre se considerara como el centro de la mascara
-        //Si es el primer valor primera esquina superior izquierda
-        if (i == 0){
-            posPrima = (buffer[i+1] * -1 + buffer[i+columnas] * -1 + buffer[i+columnas+1] * -1 + buffer[i] * 8);
-            newBuffer [i] = posPrima;
-        }
-        //Si el iterador es la segunda esquina, esquina superior derecha
-        else if(i == columnas -1){
-            posPrima = (buffer[i-1] *-1 + buffer[i+ columnas] *-1 + buffer[i+ columnas -1] *-1 + buffer[i] * 8);
-            newBuffer [i] = posPrima;
-        }
-        //esquina inferior izquerda de la imagen
-        else if(i == (columnas * filas) - columnas){
-            posPrima = (buffer[i+1] *-1 + buffer[i-columnas] * -1 + buffer[i-columnas+1] *-1 + buffer[i] * 8);
-            newBuffer [i] = posPrima;
-        }
-        //esquina inferior derecha de la imagen
-        else if(i == ((columnas * filas) - 1)){
-            posPrima = (buffer[i-1] *-1 + buffer[i-columnas] *-1 + buffer[i-columnas-1] *-1 + buffer[i] * 8);
-            newBuffer [i] = posPrima;
-            
-        }
-        //Caso orilla superior
-        else if (i != 0 && i < columnas-1){
-            posPrima = (buffer[i-1] *-1 + buffer[i+1]*-1 + buffer[i+columnas]*-1 + buffer[i+columnas-1] *-1 + buffer[i+columnas+1] *-1 + buffer[i] * 8);
-            newBuffer [i] = posPrima;
-        }
-        //Caso orilla izquierda
-        else if (i != 0 && i != (columnas * filas) - columnas && i%columnas == 0){
-            posPrima = (buffer[i+1] * -1 + buffer[i-columnas] *-1 + buffer[i-columnas+1] *-1 + buffer[i+columnas] *-1 + buffer[i+columnas+1] *-1 + buffer[i] * 8);
-            newBuffer [i] = posPrima;
-        }
-        //Caso orilla derecha
-        else if(i != (columnas * filas)-1 && i != columnas -1 && i%(columnas-1) == 0 ){
-            posPrima = (buffer[i-1] *-1 + buffer[i-columnas] *-1 + buffer[i-columnas-1] *-1 + buffer[i+columnas] *-1 + buffer[i+columnas-1] *-1 + buffer[i] * 8);
-            newBuffer [i] = posPrima;
-        }
-        //Caso orilla inferior
-        else if(i > (columnas * filas) - columnas && i < (columnas * filas) - 1 ){
-            posPrima = (buffer[i-1] *-1 + buffer[i+1] *-1 + buffer[i-columnas] *-1 + buffer[i-columnas-1] *-1 + buffer[i-columnas+1] *-1 + buffer[i] * 8);
-            newBuffer [i] = posPrima;
-        }
-        //Caso de al medio con 6 vecinos.
-        else{
-            posPrima = (buffer[i+1] *-1+ buffer[i-1] *-1+ buffer[i-columnas] *-1+ buffer[i-columnas-1] *-1+ buffer[i-columnas+1] *-1+ buffer[i+columnas]*-1 + buffer[i+columnas-1] *-1 + buffer[i+columnas + 1] *-1+ buffer[i] * 8); 
-            newBuffer [i] = posPrima;
-        }
-        //Si es 
-        i++;
-    }
-    *delineados = newBuffer;
 }

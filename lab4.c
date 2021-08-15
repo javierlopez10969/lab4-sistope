@@ -1,16 +1,13 @@
 //Autores: Javier López - Felipe Sepulveda
 /*
 • -I filename : especifica el nombre de la imagen de entrada
-• -O filename : especifica el nombre de la imagen final resultante del pipeline.
-• -M n´umero : especifica el n´umero de filas de la imagen
-• -N n´umero : especifica el n´umero de columnas de la imagen
-• -h n´umero : especifica el n´umero de hebras.
-• -r factor : factor de replicaci´on para Zoom-in
-• -b n´umero : especifica el tamano del buffer de la hebra productora.
-• -f: bandera que indica si se entregan resultados por consola. En caso 
-de que se ingrese este flag debera mostrar las dimensiones de la imagen
- antes y despues de aplicar zoom-in.
-//./lab3 -I cameraman_256x256.raw -O imagenSalida.raw -M 256 -N 256 -r 2 -h 4 -b 64 -f
+• -F filename : especifica el nombre de la imagen final con el metodo 1
+• -S filename : especifica el nombre de la imagen final con el metodo 2
+• -M numero : especifica el numero de filas de la imagen
+• -N numero : especifica el numero de columnas de la imagen
+• -b: bandera que indica si se entregan resultados por consola. Si se utiliza este flag debe imprimir los
+tiempos de ejecucion para cada metodo.
+./lab4 -I cameraman_256x256.raw -F imagen1F.raw -S imagen1S.raw -M 256 -N 256 -b
 */
 #include <stdio.h>
 #include <ctype.h>
@@ -18,28 +15,31 @@ de que se ingrese este flag debera mostrar las dimensiones de la imagen
 #include <string.h>
 #include <unistd.h>
 #include "funciones.h"
-
-
-//variables que se utilizaran para almacenar datos
-char *nombreImagen = NULL;
-char *imagenSalida = NULL;
-int filas, columnas, bandera, factor, opterr, cantHebras, bufferSize,N,m;
-float *buffer,*bufferZoom, *bufferSuavizado,*bufferDelineado;
+#include "funciones.c"
 
 
 // ### SECCIÓN DE MAIN ###
 int main(int argc, char **argv){
+    //variables que se utilizaran para almacenar datos
+    char *nombreImagen = NULL;
+    char *imagenSalida1 = NULL;
+    char *imagenSalida2 = NULL;
+    int filas, columnas, bandera, opterr;
+    float *buffer,*bufferZoom, *bufferSuavizado,*bufferDelineado;
     char c;
-    filas, columnas, bandera, factor, opterr, cantHebras, bufferSize,N,m = 0;
+    filas, columnas, bandera, opterr= 0;
     opterr += 1;
     //el siguiente ciclo se utiliza para recibir los parametros de entrada usando getopt
-    while ((c = getopt(argc, argv, "I:O:M:N:h:r:b:f:")) != -1)
+    while ((c = getopt(argc, argv, "I:F:S:M:N:b")) != -1)
         switch (c){
         case 'I':
             nombreImagen = optarg;
             break;
-        case 'O':
-            imagenSalida = optarg;
+        case 'F':
+            imagenSalida1 = optarg;
+            break;
+        case 'S':
+            imagenSalida2 = optarg;
             break;
         case 'M':
             sscanf(optarg, "%d", &filas);
@@ -47,20 +47,11 @@ int main(int argc, char **argv){
         case 'N':
             sscanf(optarg, "%d", &columnas);
             break;
-        case 'h':
-            sscanf(optarg, "%d", &cantHebras);
-            break;
-        case 'r':
-            sscanf(optarg, "%d", &factor);
-            break;
         case 'b':
-            sscanf(optarg, "%d", &bufferSize);
-            break;
-        case 'f':
             bandera = 1;
             break;
         case '?':
-            if (optopt == 'f'){
+            if (optopt == 'b'){
                 bandera = 1;
                 break;}
             if (optopt == 'c'){
@@ -78,20 +69,21 @@ int main(int argc, char **argv){
             abort();
         }
     //notificar fallos en los parametros de entrada
-    if (nombreImagen == NULL || imagenSalida == NULL ||
-        filas == 0 || columnas == 0 || factor == 0){
+    if (nombreImagen == NULL || imagenSalida1 == NULL || imagenSalida2 == NULL ||
+        filas == 0 || columnas == 0){
         printf("Faltan entradas para poder ejecutar el programa \n");
     }
     else if (columnas != filas){
         printf("Cantidad de filas y columnas es distinto \n");
     }
     else{
+        //Correcto camino
         if (bandera != 0)
-            printf("Nombre imagen de entrada : %s \n Imagen salida : %s \n  filas : %d \n columnas : %d \n factor : %d \n bandera : %d\n hebras : %d \n bufferTamaño : %d \n",
-            nombreImagen, imagenSalida, filas, columnas, factor, bandera,cantHebras,bufferSize);
+            printf("Nombre imagen de entrada : %s \n Imagen salida  1: %s \n Imagen salida  2: %s \n   filas : %d \n columnas : %d \n bandera : %d",
+            nombreImagen, imagenSalida1,imagenSalida2, filas, columnas, bandera);
     }
     return 0;
 }
 
 // EJEMPLO DE USO : la
-//./lab3 -I cameraman_256x256.raw -O imagenSalida.raw -M 256 -N 256 -r 2 -h 4 -b 64 -f
+//./lab4 -I cameraman_256x256.raw -F imagen1F.raw -S imagen1S.raw -M 256 -N 256 -b
