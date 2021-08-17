@@ -11,7 +11,8 @@
 
 //Cabeceras
 int leerArchivo(char * pathname , int filas, int columnas,float * buffer,int N,int flag);
-void suavizado(int filas, int columnas,float * buffer , float ** suavizados, int N);
+void suavizado1(int filas, int columnas,float * buffer , float ** suavizados, int N);
+void suavizado2(int filas, int columnas,float * buffer , float ** suavizados, int N);
 void printBuffer(int filas, int columnas, float * buffer);
 int escribirImagen(char * salidaName , int filas, int columnas,float * buffer,int N,int flag);
 

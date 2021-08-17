@@ -14,8 +14,8 @@ tiempos de ejecucion para cada metodo.
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include "funciones.h"
-#include "funciones.c"
 
 
 // ### SECCIÓN DE MAIN ###
@@ -25,7 +25,6 @@ int main(int argc, char **argv){
     char *imagenSalida1 = NULL;
     char *imagenSalida2 = NULL;
     int filas, columnas, bandera, opterr;
-    float *buffer,*bufferZoom, *bufferSuavizado,*bufferDelineado;
     char c;
     filas, columnas, bandera, opterr= 0;
     opterr += 1;
@@ -81,6 +80,43 @@ int main(int argc, char **argv){
         if (bandera != 0)
             printf("Nombre imagen de entrada : %s \n Imagen salida  1: %s \n Imagen salida  2: %s \n   filas : %d \n columnas : %d \n bandera : %d",
             nombreImagen, imagenSalida1,imagenSalida2, filas, columnas, bandera);
+        //Incializar buffers
+        float *buffer,*bufferSuavizado1,*bufferSuavizado2;
+        //Leer archivo
+        buffer , bufferSuavizado1, bufferSuavizado2= NULL;
+        int N = (filas * columnas * 4);
+        buffer = (float *)malloc(sizeof(float) * N);
+        leerArchivo(nombreImagen, filas, columnas, buffer, N,bandera);
+
+
+        //METODO Número 1
+        //Variables para medir el tiempo
+        time_t start_t1, end_t1;
+        double diff_t1;
+        time(&start_t1);
+        suavizado1(filas,columnas,buffer,&bufferSuavizado1,N);
+        //Termino del algoritmo
+        time(&end_t1);
+        //Diferencia
+        diff_t1 = difftime(end_t1, start_t1);
+        if (bandera == 1){printf("Tiempo de ejecución Algoritmo por filas : %f\n", diff_t1);}
+        //Escribir archivo
+        escribirImagen(imagenSalida1, filas,columnas,bufferSuavizado1,N,bandera);
+        
+
+
+        //METODO Número 2
+        //Variables para medir el tiempo
+        time_t start_t2, end_t2;
+        double diff_t2;
+        time(&start_t2);
+        suavizado2(filas,columnas,buffer,&bufferSuavizado2,N);
+        //Termino del algoritmo
+        time(&end_t2);
+        //Diferencia
+        diff_t2 = difftime(end_t2, start_t2);
+        if (bandera == 1){printf("Tiempo de ejecución Algoritmo por columnas : %f\n", diff_t2);}
+         escribirImagen(imagenSalida2, filas,columnas,bufferSuavizado2,N,bandera);
     }
     return 0;
 }
