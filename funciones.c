@@ -232,12 +232,10 @@ void suavizado2(int filas, int columnas,float * buffer , float ** suavizados, in
 
         //Casos para iterar el i
         //Cambiar la columna
-        printf("F : %d", f);
         if (f == filas-1){
             f = 0;
             n++;
             i = n;
-            printf("\n\nColumna número : % d\n", n);
         }
         //aumentar la fila
         else{
